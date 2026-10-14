@@ -11,7 +11,7 @@ void SelectionDrawer::drawPainter(QPainter &painter, const QMatrix4x4 &projectio
 {
     static auto polygon = QPolygon({ QPoint(0, 0), QPoint(-4, 32), QPoint(4, 32), QPoint(0, 0) });
 
-    painter.translate((projection * m_position).toPoint());
+    painter.translate((projection.map(m_position)).toPoint());
     painter.scale(1, -1);
 
     painter.setRenderHint(QPainter::Antialiasing);

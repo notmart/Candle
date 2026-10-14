@@ -78,7 +78,7 @@ void GcodeViewParse::updateModelMinLineLength(const QVector3D &start, const QVec
 
 void GcodeViewParse::reset()
 {
-    QtConcurrent::run([lineSegments = m_lineSegments, lineIndexes = m_lineSegmentIndexes]
+    (void)QtConcurrent::run([lineSegments = m_lineSegments, lineIndexes = m_lineSegmentIndexes]
     {
         foreach (auto ls, *lineSegments)
             delete ls;
@@ -196,8 +196,8 @@ void GcodeViewParse::updateFromParser(GcodeParser *gp, double arcPrecision, bool
                         if (!Util::nIsNaN(m_axesRotationVectors[RotationAxisA]))
                             endRotation.rotate(segmentRotation, m_axesRotationVectors[RotationAxisA]);
 
-                        ls = new LineSegment(startRotation * startPoint, 
-                            endRotation * nextPoint, lineIndex);
+                        ls = new LineSegment(startRotation.map(startPoint), 
+                            endRotation.map(nextPoint), lineIndex);
                         ls->setIsArc(ps->isArc());
                         ls->setIsClockwise(ps->isClockwise());
                         ls->setPlane(ps->plane());
@@ -245,8 +245,8 @@ void GcodeViewParse::updateFromParser(GcodeParser *gp, double arcPrecision, bool
                         if (!Util::nIsNaN(m_axesRotationVectors[RotationAxisA]))
                             endRotation.rotate(segmentRotation, m_axesRotationVectors[RotationAxisA]);
 
-                        ls = new LineSegment(startRotation * startPoint,
-                            endRotation * nextPoint, lineIndex);
+                        ls = new LineSegment(startRotation.map(startPoint),
+                            endRotation.map(nextPoint), lineIndex);
                         ls->setIsSpline(true);
                         ls->setIsFastTraverse(ps->isFastTraverse());
                         ls->setIsZMovement(ps->isZMovement());
@@ -290,7 +290,7 @@ void GcodeViewParse::updateFromParser(GcodeParser *gp, double arcPrecision, bool
                     if (!Util::nIsNaN(m_axesRotationVectors[RotationAxisA]))
                         endRotation.rotate(segmentRotation, m_axesRotationVectors[RotationAxisA]);
 
-                    ls = new LineSegment(startRotation * startPoint, endRotation * nextPoint, lineIndex);
+                    ls = new LineSegment(startRotation.map(startPoint), endRotation.map(nextPoint), lineIndex);
 
                     ls->setIsArc(ps->isArc());
                     ls->setIsFastTraverse(ps->isFastTraverse());

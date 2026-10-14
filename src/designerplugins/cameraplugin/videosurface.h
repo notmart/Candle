@@ -1,20 +1,22 @@
 ﻿#pragma once
 
-#include <QAbstractVideoSurface>
+#include <QObject>
+#include <QImage>
+#include <QVideoSink>
 #include <QVideoFrame>
 
-class VideoSurface : public QAbstractVideoSurface
+class VideoSurface : public QObject
 {
     Q_OBJECT
 
 public:
-    VideoSurface(QObject *parent = nullptr) : QAbstractVideoSurface(parent) {}
+    VideoSurface(QObject *parent = nullptr);
 
-    QList<QVideoFrame::PixelFormat> supportedPixelFormats(
-        QAbstractVideoBuffer::HandleType handleType = QAbstractVideoBuffer::NoHandle) const override;
-
-    bool present(const QVideoFrame &frame) override;
+    QVideoSink *sink() const { return m_sink; }
 
 signals:
     void frameReady(const QImage &image);
+
+private:
+    QVideoSink *m_sink;
 };

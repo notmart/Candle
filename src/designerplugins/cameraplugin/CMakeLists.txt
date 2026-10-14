@@ -1,10 +1,10 @@
-find_package(Qt5 COMPONENTS Core Widgets UiPlugin Multimedia MultimediaWidgets REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets UiPlugin Multimedia REQUIRED)
 
 file(GLOB SRC_FILES *.cpp)
 
 add_library(cameraplugin SHARED ${SRC_FILES})
 
-target_link_libraries(cameraplugin PRIVATE Qt5::Core Qt5::Widgets Qt5::UiPlugin Qt5::Multimedia Qt5::MultimediaWidgets)
+target_link_libraries(cameraplugin PRIVATE Qt6::Core Qt6::Widgets Qt6::UiPlugin Qt6::Multimedia)
 
 install(TARGETS cameraplugin
     RUNTIME DESTINATION ${DESIGNER_DESTINATION}

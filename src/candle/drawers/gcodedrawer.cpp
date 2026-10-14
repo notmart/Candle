@@ -55,7 +55,7 @@ void GcodeDrawer::drawPainter(QPainter &painter, const QMatrix4x4 &projection, d
     {
         painter.save();
 
-        painter.translate((projection * m_start).toPoint());
+        painter.translate((projection.map(m_start)).toPoint());
         painter.scale(1, -1);
 
         painter.setPen(QPen(m_colorStart));
@@ -67,7 +67,7 @@ void GcodeDrawer::drawPainter(QPainter &painter, const QMatrix4x4 &projection, d
 
     if (!Util::nIsNaN(m_end))
     {
-        painter.translate((projection * m_end).toPoint());
+        painter.translate((projection.map(m_end)).toPoint());
         painter.scale(1, -1);
 
         painter.setPen(QPen(m_colorEnd));

@@ -25,7 +25,6 @@ static QMap<QtMsgType, QString> messageTypeMap = {
     {QtMsgType::QtDebugMsg, "DEBUG"},
     {QtMsgType::QtFatalMsg, "FATAL"},
     {QtMsgType::QtInfoMsg, "INF"},
-    {QtMsgType::QtSystemMsg, "SYS"},
     {QtMsgType::QtWarningMsg, "WARN"}
 };
 

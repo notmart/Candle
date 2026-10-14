@@ -1,6 +1,8 @@
 #include "camerawidget.h"
 
 #include <QCamera>
+#include <QMediaDevices>
+#include <QMediaCaptureSession>
 #include <QScrollBar>
 #include <QMouseEvent>
 #include <QPainter>
@@ -11,6 +13,7 @@
 
 CameraWidget::CameraWidget(QWidget *parent) : QWidget(parent),
                                               m_camera(nullptr),
+                                              m_captureSession(nullptr),
                                               m_videoLabel(nullptr),
                                               m_scrollArea(nullptr),
                                               m_overlay(nullptr),
@@ -18,7 +21,7 @@ CameraWidget::CameraWidget(QWidget *parent) : QWidget(parent),
                                               m_zoom(1.0),
                                               m_mousePos(QPoint(0, 0))
 {
-    m_videoSurface = new VideoSurface(m_camera);
+    m_videoSurface = new VideoSurface(this);
     connect(m_videoSurface, &VideoSurface::frameReady, this, &CameraWidget::processFrame);
 
     m_videoLabel = new QLabel(this);
@@ -36,7 +39,7 @@ CameraWidget::CameraWidget(QWidget *parent) : QWidget(parent),
     m_scrollArea->setStyleSheet("QScrollArea { background-color: black; }");
 
     layout->addWidget(m_scrollArea);
-    layout->setMargin(0);
+    layout->setContentsMargins(0, 0, 0, 0);
 
     m_overlay = new Overlay(m_videoLabel);
 }
@@ -47,11 +50,11 @@ void CameraWidget::setCameraName(QString cameraName)
 
     if (!m_cameraName.isEmpty())
     {
-        foreach (const QCameraInfo &cameraInfo, QCameraInfo::availableCameras())
+        for (const QCameraDevice &cameraDevice : QMediaDevices::videoInputs())
         {
-            if (cameraInfo.description() == m_cameraName)
+            if (cameraDevice.description() == m_cameraName)
             {
-                initCamera(cameraInfo);
+                initCamera(cameraDevice);
                 return;
             }
         }
@@ -70,7 +73,7 @@ QStringList CameraWidget::availableCameras() const
 {
     QStringList l;
 
-    foreach (const QCameraInfo &i, QCameraInfo::availableCameras())
+    for (const QCameraDevice &i : QMediaDevices::videoInputs())
         l << i.description();
 
     return l;
@@ -78,11 +81,11 @@ QStringList CameraWidget::availableCameras() const
 
 QStringList CameraWidget::availableResolutions() const
 {
-    if (m_camera)
+    if (!m_cameraDevice.isNull())
     {
         QStringList l;
-        foreach (QSize s, m_camera->supportedViewfinderResolutions())
-            l.append(QString("%1x%2").arg(s.width()).arg(s.height()));
+        for (const QCameraFormat &f : m_cameraDevice.videoFormats())
+            l.append(QString("%1x%2").arg(f.resolution().width()).arg(f.resolution().height()));
         return l;
     }
     else
@@ -220,7 +223,7 @@ void CameraWidget::mousePressEvent(QMouseEvent *e)
 {
     if (e->buttons() == Qt::LeftButton)
     {
-        m_mousePos = e->pos();
+        m_mousePos = e->position().toPoint();
         m_aimPos = m_overlay->aimPosition();
     }
 
@@ -233,20 +236,20 @@ void CameraWidget::mouseMoveEvent(QMouseEvent *e)
     if (e->buttons() == Qt::LeftButton && e->modifiers() == Qt::ShiftModifier)
     {
 
-        QPointF d = QPointF((double)(e->pos() - m_mousePos).x() / m_overlay->width(),
-                            (double)(e->pos() - m_mousePos).y() / m_overlay->height());
+        QPointF d = QPointF((double)(e->position().toPoint() - m_mousePos).x() / m_overlay->width(),
+                            (double)(e->position().toPoint() - m_mousePos).y() / m_overlay->height());
 
         QPointF o = m_aimPos + d;
         setAimPos(QVariantList() << o.x() << o.y());
     }
     else if (e->buttons() == Qt::LeftButton)
     {
-        QPoint d = e->pos() - m_mousePos;
+        QPoint d = e->position().toPoint() - m_mousePos;
 
         setPos(QVariantList() << m_scrollArea->horizontalScrollBar()->value() - d.x()
                               << m_scrollArea->verticalScrollBar()->value() - d.y());
 
-        m_mousePos = e->pos();
+        m_mousePos = e->position().toPoint();
     }
 
     QWidget::mouseMoveEvent(e);
@@ -254,12 +257,12 @@ void CameraWidget::mouseMoveEvent(QMouseEvent *e)
 
 void CameraWidget::wheelEvent(QWheelEvent *e)
 {
-    double f = e->delta() > 0 ? 1.25 : 0.8;
+    double f = e->angleDelta().y() > 0 ? 1.25 : 0.8;
 
     double prevZoom = m_zoom;
     m_zoom = qBound<double>(1, m_zoom * f, 4);
 
-    QPointF deltaPos = e->posF() / prevZoom - m_scrollArea->widget()->pos() / prevZoom;
+    QPointF deltaPos = e->position() / prevZoom - m_scrollArea->widget()->pos() / prevZoom;
     QPointF delta = deltaPos * m_zoom - deltaPos * prevZoom;
     QPoint d = delta.toPoint();
 
@@ -288,7 +291,7 @@ void CameraWidget::hideEvent(QHideEvent *e)
 {
     QWidget::hideEvent(e);
 
-    if (m_camera && m_camera->state() == QCamera::ActiveState)
+    if (m_camera && m_camera->isActive())
         stopCamera();
 }
 
@@ -303,22 +306,28 @@ void CameraWidget::showEvent(QShowEvent *e)
     m_scrollArea->verticalScrollBar()->setValue(m_pos.y());
 }
 
-void CameraWidget::initCamera(const QCameraInfo &cameraInfo)
+void CameraWidget::initCamera(const QCameraDevice &cameraDevice)
 {
     if (m_camera)
         deleteCamera();
 
-    m_camera = new QCamera(cameraInfo);
+    m_cameraDevice = cameraDevice;
 
-    m_camera->setViewfinder(m_videoSurface);
-    m_camera->load();
-    m_camera->setCaptureMode(QCamera::CaptureViewfinder);
+    m_camera = new QCamera(cameraDevice, this);
+    m_captureSession = new QMediaCaptureSession(this);
+    m_captureSession->setCamera(m_camera);
+    m_captureSession->setVideoSink(m_videoSurface->sink());
 
-    auto viewFinderSettings = m_camera->viewfinderSettings();
-    viewFinderSettings.setResolution(m_resolution);
-    m_camera->setViewfinderSettings(viewFinderSettings);
+    for (const QCameraFormat &format : cameraDevice.videoFormats())
+    {
+        if (format.resolution() == m_resolution)
+        {
+            m_camera->setCameraFormat(format);
+            break;
+        }
+    }
 
-    if (m_camera->state() == QCamera::LoadedState && isVisible())
+    if (isVisible())
         m_camera->start();
 }
 
@@ -328,8 +337,9 @@ void CameraWidget::deleteCamera()
         return;
 
     m_camera->stop();
-    m_camera->unload();
-    m_camera->deleteLater();
+    delete m_captureSession;
+    m_captureSession = nullptr;
+    delete m_camera;
     m_camera = nullptr;
 
     // Wait last frame
@@ -362,7 +372,12 @@ void CameraWidget::updateSize()
 
 void CameraWidget::processFrame(const QImage &frame)
 {
-    m_currentFrame = frame.mirrored(m_mirrorHorizontal, m_mirrorVertical);
+    Qt::Orientations orientations;
+
+    if (m_mirrorHorizontal) orientations |= Qt::Horizontal;
+    if (m_mirrorVertical) orientations |= Qt::Vertical;
+
+    m_currentFrame = frame.flipped(orientations);
 
     drawCurrentFrame();
 }

@@ -11,28 +11,23 @@ execute_process(
 configure_file(versionconfig.h.in versionconfig.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-find_package(Qt5 COMPONENTS Core Widgets OpenGL SerialPort Script ScriptTools LinguistTools Network WebSockets Help REQUIRED)
-
-if(WIN32)
-    find_package(Qt5 COMPONENTS WinExtras)
-endif()
+find_package(Qt6 COMPONENTS Core Widgets OpenGL OpenGLWidgets SerialPort Qml Concurrent LinguistTools Network WebSockets Help REQUIRED)
 
 file(GLOB_RECURSE SRC_FILES *.cpp)
 file(GLOB TS_FILES translations/*.ts)
 file(GLOB UI_FILES *.ui)
 
-qt5_add_resources(RSC_FILES
+qt6_add_resources(RSC_FILES
         shaders.qrc
         images.qrc
         fonts.qrc
         styles.qrc
 )
 
-qt5_add_translation(QM_FILES ${TS_FILES})
+qt6_add_translation(QM_FILES ${TS_FILES})
 
 if(WIN32)
     add_executable(candle ${SRC_FILES} ${RSC_FILES} ${QM_FILES} icon.rc)
-    target_link_libraries(candle PRIVATE Qt5::WinExtras)
     set_target_properties(candle PROPERTIES WIN32_EXECUTABLE ON)
 elseif(APPLE)
     set(APP_ICON_MACOS "${CMAKE_SOURCE_DIR}/src/candle/images/candle.icns")
@@ -56,7 +51,7 @@ target_compile_definitions(candle PRIVATE
         QT_NO_DEBUG
 )
 
-target_link_libraries(candle PRIVATE customwidgets Qt5::Core Qt5::Widgets Qt5::OpenGL Qt5::SerialPort Qt5::Script Qt5::ScriptTools Qt5::Network Qt5::WebSockets Qt5::Help)
+target_link_libraries(candle PRIVATE customwidgets Qt6::Core Qt6::Widgets Qt6::OpenGL Qt6::OpenGLWidgets Qt6::SerialPort Qt6::Qml Qt6::Concurrent Qt6::Network Qt6::WebSockets Qt6::Help)
 
 # Main executable
 if(APPLE)
@@ -75,9 +70,9 @@ endif()
 install(FILES ${QM_FILES} DESTINATION ${TRANSLATIONS_DESTINATION})
 
 # Base translations
-get_target_property(QT5_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
+get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
 execute_process(
-    COMMAND "${QT5_QMAKE_EXECUTABLE}" -query QT_INSTALL_TRANSLATIONS
+    COMMAND "${QT_QMAKE_EXECUTABLE}" -query QT_INSTALL_TRANSLATIONS
     OUTPUT_VARIABLE QT_TRANSLATIONS_DIR
     OUTPUT_STRIP_TRAILING_WHITESPACE
 )
@@ -92,13 +87,6 @@ foreach(LANG ${QT_LANGUAGES})
             DESTINATION ${TRANSLATIONS_DESTINATION}
         )
     endif()
-    set(QT_TRANSLATION_FILE_SCRIPT "${QT_TRANSLATIONS_DIR}/qtscript_${LANG}.qm")
-    if(EXISTS "${QT_TRANSLATION_FILE_SCRIPT}")
-        install(
-            FILES "${QT_TRANSLATION_FILE_SCRIPT}"
-            DESTINATION ${TRANSLATIONS_DESTINATION}
-        )
-    endif()    
     set(QT_TRANSLATION_FILE_HELP "${QT_TRANSLATIONS_DIR}/qt_help_${LANG}.qm")
     if(EXISTS "${QT_TRANSLATION_FILE_HELP}")
         install(
@@ -118,7 +106,7 @@ endif()
 # Translations
 add_custom_target(
     lupdate
-    COMMAND $<TARGET_FILE:Qt${QT_VERSION}::lupdate>
+    COMMAND $<TARGET_FILE:Qt6::lupdate>
         ${SRC_FILES} ${UI_FILES}
         -locations none
         -no-obsolete
@@ -127,14 +115,16 @@ add_custom_target(
 )
 
 # Docs
+if(TARGET Qt6::qhelpgenerator)
 add_custom_target(
     docs
-    COMMAND $<TARGET_FILE:Qt${QT_VERSION}::qhelpgenerator>
+    COMMAND $<TARGET_FILE:Qt6::qhelpgenerator>
         ${CMAKE_SOURCE_DIR}/help/candle.qhcp
         -o ${CMAKE_SOURCE_DIR}/help/candle.qhc
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     VERBATIM
 )
+endif()
 
 # Install
 # Candle plugins
@@ -158,7 +148,7 @@ endif()
 
 # Plugins
 if(APPLE)
-    get_target_property(QT_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
+    get_target_property(QT_QMAKE_EXECUTABLE Qt6::qmake IMPORTED_LOCATION)
     execute_process(
         COMMAND ${QT_QMAKE_EXECUTABLE} -query QT_INSTALL_PLUGINS
         OUTPUT_VARIABLE QT_PLUGINS_DIR
@@ -170,8 +160,8 @@ if(APPLE)
         FILES_MATCHING PATTERN "*.dylib"
     )
 
-    install(DIRECTORY "${QT_PLUGINS_DIR}/mediaservice/"
-        DESTINATION Candle.app/Contents/PlugIns/mediaservice
+    install(DIRECTORY "${QT_PLUGINS_DIR}/multimedia/"
+        DESTINATION Candle.app/Contents/PlugIns/multimedia
         FILES_MATCHING PATTERN "*.dylib"
     )
 

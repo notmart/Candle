@@ -64,7 +64,7 @@ jobs:
 
     - name: Create bundle
       run: |
-        ${{github.workspace}}/build/vcpkg_installed/x64-osx-dynamic-release/tools/qt5/bin/macdeployqt ${{github.workspace}}/build/Candle/Candle.app
+        ${{github.workspace}}/build/vcpkg_installed/x64-osx-dynamic-release/tools/qt6/bin/macdeployqt ${{github.workspace}}/build/Candle/Candle.app
 
     - name: Create image
       run: |

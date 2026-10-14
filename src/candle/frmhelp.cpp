@@ -64,7 +64,9 @@ frmHelp::frmHelp(const QString &language, QWidget *parent) : QDialog(parent), ui
         ui->txtBrowser->setSource(item->url());
     });
 
-    connect(contents, &QHelpContentWidget::linkActivated, ui->txtBrowser, qOverload<const QUrl &>(&QTextBrowser::setSource));
+    connect(contents, &QHelpContentWidget::linkActivated, ui->txtBrowser, [this](const QUrl &link) {
+        ui->txtBrowser->setSource(link);
+    });
 
     connect(m_helpEngine->searchEngine()->queryWidget(), &QHelpSearchQueryWidget::search, [this] {
         m_helpEngine->searchEngine()->search(m_helpEngine->searchEngine()->queryWidget()->searchInput());

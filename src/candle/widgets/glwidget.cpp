@@ -501,7 +501,7 @@ void GLWidget::updateView()
     }
 
     QMatrix4x4 ivp = (m_projectionMatrix * m_viewMatrix).inverted();
-    m_windowSizeWorld = (ivp * QVector3D(0, 1, m_planeDepth) - ivp * QVector3D(0, 0, m_planeDepth)).length() * 2.0;
+    m_windowSizeWorld = (ivp.map(QVector3D(0, 1, m_planeDepth)) - ivp.map(QVector3D(0, 0, m_planeDepth))).length() * 2.0;
 }
 
 void GLWidget::paintGL()
@@ -619,16 +619,16 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 void GLWidget::wheelEvent(QWheelEvent *we)
 {
     if (we->angleDelta().manhattanLength() >= 120) {
-        if (m_zoom > 0.1 && we->delta() < 0) {
-            m_pan.setX(m_pan.x() - ((double)we->pos().x() / width() - 0.5 + m_pan.x()) * (1 - 1 / ZOOMSTEP));
-            m_pan.setY(m_pan.y() + ((double)we->pos().y() / height() - 0.5 - m_pan.y()) * (1 - 1 / ZOOMSTEP));
+        if (m_zoom > 0.1 && we->angleDelta().y() < 0) {
+            m_pan.setX(m_pan.x() - ((double)we->position().x() / width() - 0.5 + m_pan.x()) * (1 - 1 / ZOOMSTEP));
+            m_pan.setY(m_pan.y() + ((double)we->position().y() / height() - 0.5 - m_pan.y()) * (1 - 1 / ZOOMSTEP));
 
             m_zoom /= ZOOMSTEP;
         }
-        else if (m_zoom < 10 && we->delta() > 0)
+        else if (m_zoom < 10 && we->angleDelta().y() > 0)
         {
-            m_pan.setX(m_pan.x() - ((double)we->pos().x() / width() - 0.5 + m_pan.x()) * (1 - ZOOMSTEP));
-            m_pan.setY(m_pan.y() + ((double)we->pos().y() / height() - 0.5 - m_pan.y()) * (1 - ZOOMSTEP));
+            m_pan.setX(m_pan.x() - ((double)we->position().x() / width() - 0.5 + m_pan.x()) * (1 - ZOOMSTEP));
+            m_pan.setY(m_pan.y() + ((double)we->position().y() / height() - 0.5 - m_pan.y()) * (1 - ZOOMSTEP));
 
             m_zoom *= ZOOMSTEP;
         }

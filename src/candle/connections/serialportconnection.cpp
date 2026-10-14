@@ -8,7 +8,7 @@ SerialPortConnection::SerialPortConnection(QObject *parent) : Connection(parent)
     m_serialPort.setFlowControl(QSerialPort::NoFlowControl);
 
     QObject::connect(&m_serialPort, &QSerialPort::readyRead, this, &SerialPortConnection::onReadyRead, Qt::QueuedConnection);
-    QObject::connect(&m_serialPort, QOverload<QSerialPort::SerialPortError>::of(&QSerialPort::error), this,
+    QObject::connect(&m_serialPort, &QSerialPort::errorOccurred, this,
         &SerialPortConnection::onError);
 }
 

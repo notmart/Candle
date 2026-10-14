@@ -2,13 +2,13 @@
 #define CAMERAWIDGET_H
 
 #include <QScrollArea>
-#include <QCameraInfo>
+#include <QCameraDevice>
 #include <QLabel>
 #include "overlay.h"
 #include "videosurface.h"
 
 class QCamera;
-class QCameraViewfinder;
+class QMediaCaptureSession;
 
 class CameraWidget : public QWidget
 {
@@ -78,6 +78,8 @@ public slots:
 
 private:
     QCamera *m_camera;
+    QMediaCaptureSession *m_captureSession;
+    QCameraDevice m_cameraDevice;
     QLabel *m_videoLabel;
     VideoSurface *m_videoSurface;
     QScrollArea *m_scrollArea;
@@ -95,7 +97,7 @@ private:
     bool m_mirrorHorizontal;
     bool m_mirrorVertical;
 
-    void initCamera(const QCameraInfo &cameraInfo);
+    void initCamera(const QCameraDevice &cameraDevice);
     void deleteCamera();
 
     void resizeEvent(QResizeEvent *e);

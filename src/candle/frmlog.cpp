@@ -3,6 +3,7 @@
 
 #include <QFileSystemWatcher>
 #include <QTextStream>
+#include <QFile>
 #include <QStandardPaths>
 #include "frmlog.h"
 #include "ui_frmlog.h"

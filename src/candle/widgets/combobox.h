@@ -17,6 +17,7 @@ public slots:
     void addItems(const QStringList &texts) {QComboBox::addItems(texts);}
     void setItems(const QStringList &texts) {QComboBox::clear(); addItems(texts);}
     QStringList items() {QStringList l; for (int i = 0; i < count(); i++) l << itemText(i); return l;};
+    void setAutoCompletion(bool enable);
 
 signals:
     void returnPressed();

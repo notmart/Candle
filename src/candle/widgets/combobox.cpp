@@ -3,10 +3,25 @@
 
 #include <QDebug>
 #include <QKeyEvent>
+#include <QCompleter>
 #include "combobox.h"
 
 ComboBox::ComboBox(QWidget *parent) : QComboBox(parent)
 {
+}
+
+void ComboBox::setAutoCompletion(bool enable)
+{
+    if (enable)
+    {
+        auto completer = new QCompleter(model(), this);
+        completer->setCaseSensitivity(Qt::CaseSensitive);
+        setCompleter(completer);
+    }
+    else
+    {
+        setCompleter(nullptr);
+    }
 }
 
 void ComboBox::keyPressEvent(QKeyEvent *e)

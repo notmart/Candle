@@ -3,7 +3,7 @@
 
 #pragma once
 #include <QFrame>
-#include <QScriptEngine>
+#include <QJSEngine>
 
 namespace Ui {
 class frmScript;
@@ -18,7 +18,7 @@ public:
     ~frmScript();
 
 signals:
-    void beforeScriptStart(QScriptEngine &engine);
+    void beforeScriptStart(QJSEngine &engine);
 
 private slots:
     void on_cmdNew_clicked();

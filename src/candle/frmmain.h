@@ -11,11 +11,14 @@
 #include <QStringList>
 #include <QList>
 #include <QTime>
+#include <QElapsedTimer>
+#include <QActionGroup>
 #include <QMenu>
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QProgressDialog>
-#include <QScriptEngine>
+#include <QJSValue>
+#include <QJSEngine>
 #include <QGroupBox>
 #include <QPalette>
 #include <exception>
@@ -46,6 +49,7 @@
 
 #include "script/scriptvars.h"
 #include "script/scriptapp.h"
+#include "script/scriptextension.h"
 
 #include "settings/storage.h"
 #include "settings/storagegroup.h"
@@ -53,7 +57,6 @@
 #include "connections/connection.h"
 
 #ifdef Q_OS_WIN
-    #include <QtWinExtras/QtWinExtras>
     #include "shobjidl.h"
 #endif
 
@@ -271,9 +274,9 @@ private slots:
     void onCboCommandReturnPressed();
     void onDockTopLevelChanged(bool topLevel);
     void onScrollBarAction(int action);
-    void onScriptException(const QScriptValue &exception);
+    void onScriptException(const QJSValue &exception);
     void onActServiceProfilesSelected(bool checked);
-    void onBeforeScriptStart(QScriptEngine &engine);
+    void onBeforeScriptStart(QJSEngine &engine);
     void onTableHistoryChanged(QStringList history, int currentIndex);
 
     void updateHeightMapInterpolationDrawer(bool reset = false);
@@ -343,10 +346,6 @@ private:
 
     QMenu *m_tableMenu;
     QMessageBox* m_senderErrorBox;
-#ifdef Q_OS_WIN
-    QWinTaskbarButton *m_taskBarButton;
-    QWinTaskbarProgress *m_taskBarProgress;
-#endif
 
     // Parsers
     GcodeViewParse m_viewParser;
@@ -406,7 +405,7 @@ private:
     QTimer m_timerConnection;
     QTimer m_timerStateQuery;
     QBasicTimer m_timerToolAnimation;
-    QTime m_startTime;
+    QElapsedTimer m_startTime;
 
     // Stored parser params
     QString m_storedParserStatus;
@@ -448,8 +447,9 @@ private:
     QVector4D m_jogVector;
 
     // Script
-    QScriptEngine m_scriptEngine;
+    QJSEngine m_scriptEngine;
     ScriptApp* m_scriptApp;
+    ScriptExtension m_scriptExtension;
 
     // TODO: remove
     ScriptVars m_storedVars;
@@ -564,7 +564,6 @@ private:
 
     static bool actionLessThan(const QAction *a1, const QAction *a2);
     static bool actionTextLessThan(const QAction *a1, const QAction *a2);
-    static QScriptValue importExtension(QScriptContext *context, QScriptEngine *engine);
 };
 
 typedef QMap<QString, QList<QKeySequence>> ShortcutsMap;

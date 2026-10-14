@@ -6,7 +6,6 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDebug>
-#include <QScriptEngineDebugger>
 #include <QMainWindow>
 #include <QAction>
 #include "frmscript.h"
@@ -70,32 +69,28 @@ void frmScript::on_cmdSave_clicked()
 
 void frmScript::on_cmdStart_clicked()
 {
-    QScriptEngine se;
+    QJSEngine se;
 
     emit beforeScriptStart(se);
 
     auto sv = se.evaluate(ui->txtScript->toPlainText());
 
     if (sv.isError()) {
-        qCritical(scriptLogCategory) << "Error evaluating script" << sv.toString() << se.uncaughtExceptionBacktrace();
+        qCritical(scriptLogCategory) << "Error evaluating script" << sv.toString();
     }
 }
 
 void frmScript::on_cmdDebug_clicked()
 {
-    QScriptEngine se;
-    QScriptEngineDebugger sd(this);
-
-    sd.attachTo(&se);
-    sd.standardWindow()->setWindowIcon(this->windowIcon());
-    sd.action(QScriptEngineDebugger::InterruptAction)->trigger();
+    // QScriptEngineDebugger was removed in Qt6; run the script without the debugger.
+    QJSEngine se;
 
     emit beforeScriptStart(se);
 
     auto sv = se.evaluate(ui->txtScript->toPlainText());
 
     if (sv.isError()) {
-        qCritical(scriptLogCategory) << "Error evaluating script" << sv.toString() << se.uncaughtExceptionBacktrace();
+        qCritical(scriptLogCategory) << "Error evaluating script" << sv.toString();
     }
 }
 

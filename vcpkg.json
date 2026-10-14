@@ -1,12 +1,12 @@
 {
   "dependencies": [
     {
-      "name": "qt5",
+      "name": "qt6",
       "features": [
+        "base",
         "serialport",
-        "script",
-        "extras",
-        "multimedia"
+        "multimedia",
+        "websockets"
       ]
     },
     {

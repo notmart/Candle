@@ -9,7 +9,7 @@ WebSocketConnection::WebSocketConnection(QObject *parent) : Connection(parent)
         Qt::QueuedConnection);
     QObject::connect(&m_ws, &QWebSocket::textMessageReceived, this, &WebSocketConnection::onTextMessage,
         Qt::QueuedConnection);
-    QObject::connect(&m_ws, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error), this,
+    QObject::connect(&m_ws, &QWebSocket::errorOccurred, this,
         &WebSocketConnection::onError);
     QObject::connect(&m_ws, &QWebSocket::connected, this, &Connection::connected);
     QObject::connect(&m_ws, &QWebSocket::disconnected, this, &Connection::disconnected);
